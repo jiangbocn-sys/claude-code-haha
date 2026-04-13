@@ -41,6 +41,12 @@ docs/superpowers/
 # Debug / temp screenshots (root dir only)
 /*.png
 
+# Private keys & credentials
+*.pem
+*.key
+*.p12
+credentials*.json
+
 # TS build cache
 *.tsbuildinfo
 

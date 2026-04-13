@@ -13,14 +13,12 @@ type TimeGroup = 'today' | 'yesterday' | 'last7days' | 'last30days' | 'older'
 const TIME_GROUP_ORDER: TimeGroup[] = ['today', 'yesterday', 'last7days', 'last30days', 'older']
 
 export function Sidebar() {
-  const {
-    sessions,
-    selectedProjects,
-    error,
-    fetchSessions,
-    deleteSession,
-    renameSession,
-  } = useSessionStore()
+  const sessions = useSessionStore((s) => s.sessions)
+  const selectedProjects = useSessionStore((s) => s.selectedProjects)
+  const error = useSessionStore((s) => s.error)
+  const fetchSessions = useSessionStore((s) => s.fetchSessions)
+  const deleteSession = useSessionStore((s) => s.deleteSession)
+  const renameSession = useSessionStore((s) => s.renameSession)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const [searchQuery, setSearchQuery] = useState('')
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null)

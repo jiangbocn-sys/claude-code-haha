@@ -48,7 +48,7 @@ export function DayOfWeekPicker({ selected, onChange }: Props) {
               }
             `}
           >
-            {t(DAY_KEYS[day] as any)}
+            {t(DAY_KEYS[day]!)}
           </button>
         )
       })}

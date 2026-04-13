@@ -11,7 +11,26 @@
       "identifier": "shell:allow-execute",
       "allow": [
         {
-          "args": true,
+          "args": [
+            "server",
+            { "validator": "regex", "value": "^(--port|--host|--config)=.+$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "adapters",
+            { "validator": "regex", "value": "^(feishu|telegram|lark|slack)(:.+)?$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "cli",
+            { "validator": "regex", "value": "^.+$" }
+          ],
           "name": "binaries/claude-sidecar",
           "sidecar": true
         }
@@ -21,7 +40,26 @@
       "identifier": "shell:allow-spawn",
       "allow": [
         {
-          "args": true,
+          "args": [
+            "server",
+            { "validator": "regex", "value": "^(--port|--host|--config)=.+$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "adapters",
+            { "validator": "regex", "value": "^(feishu|telegram|lark|slack)(:.+)?$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "cli",
+            { "validator": "regex", "value": "^.+$" }
+          ],
           "name": "binaries/claude-sidecar",
           "sidecar": true
         }
@@ -31,7 +69,26 @@
       "identifier": "shell:allow-kill",
       "allow": [
         {
-          "args": true,
+          "args": [
+            "server",
+            { "validator": "regex", "value": "^(--port|--host|--config)=.+$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "adapters",
+            { "validator": "regex", "value": "^(feishu|telegram|lark|slack)(:.+)?$" }
+          ],
+          "name": "binaries/claude-sidecar",
+          "sidecar": true
+        },
+        {
+          "args": [
+            "cli",
+            { "validator": "regex", "value": "^.+$" }
+          ],
           "name": "binaries/claude-sidecar",
           "sidecar": true
         }

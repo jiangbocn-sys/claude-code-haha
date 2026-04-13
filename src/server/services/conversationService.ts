@@ -335,7 +335,7 @@ export class ConversationService {
         const msg = JSON.parse(line)
         session.sdkMessages.push(msg)
         if (session.sdkMessages.length > 40) {
-          session.sdkMessages.shift()
+          session.sdkMessages.splice(0, 20)
         }
         if (
           msg?.type === 'control_request' &&
@@ -404,7 +404,7 @@ export class ConversationService {
             .filter(Boolean)) {
             session.stderrLines.push(line)
             if (session.stderrLines.length > 20) {
-              session.stderrLines.shift()
+              session.stderrLines.splice(0, 10)
             }
           }
         }

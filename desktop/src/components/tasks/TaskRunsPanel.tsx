@@ -141,7 +141,7 @@ export function TaskRunsPanel({ taskId, onClose, refreshKey }: Props) {
 
                     {/* Status text */}
                     <span className="text-xs font-medium" style={{ color: cfg.color }}>
-                      {t(`tasks.runStatus.${run.status}` as any)}
+                      {t(`tasks.runStatus.${run.status}` as any)} {/* dynamic key */}
                     </span>
 
                     {/* Time */}

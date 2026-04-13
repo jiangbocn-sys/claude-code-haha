@@ -516,6 +516,29 @@ export const en = {
   'scheduledPage.connectedLocal': 'Connected to local node',
   'scheduledPage.thisMonth': '{count} this month',
 
+  // ─── Update Checker ──────────────────────────────────────
+  'update.available': 'v{version} available',
+  'update.newVersion': 'New version v{version} available',
+  'update.downloading': 'Downloading...',
+  'update.now': 'Update now',
+  'update.later': 'Later',
+  'update.failed': 'Update failed: {error}',
+
+  // ─── Active Session ──────────────────────────────────────
+  'session.untitled': 'Untitled Session',
+  'session.active': 'session active',
+  'session.lastUpdated': 'last updated {time}',
+  'session.messages': '{count} messages',
+  'session.workspaceUnavailable': 'Workspace unavailable: {dir}',
+  'session.timeJustNow': 'just now',
+  'session.timeMinutes': '{n}m ago',
+  'session.timeHours': '{n}h ago',
+  'session.timeDays': '{n}d ago',
+
+  // ─── App Shell ──────────────────────────────────────
+  'app.serverFailed': 'Local server failed to start',
+  'app.launching': 'Launching local workspace...',
+
   // ─── Error Codes ──────────────────────────────────────
   'error.CLI_NOT_RUNNING': 'CLI process is not running. The session may have ended or the process crashed.',
   'error.CLI_START_FAILED': 'Failed to start CLI process.',

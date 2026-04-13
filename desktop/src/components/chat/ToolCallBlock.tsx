@@ -4,6 +4,7 @@ import { DiffViewer } from './DiffViewer'
 import { TerminalChrome } from './TerminalChrome'
 import { CopyButton } from '../shared/CopyButton'
 import { useTranslation } from '../../i18n'
+import type { TranslationKey } from '../../i18n'
 import { InlineImageGallery } from './InlineImageGallery'
 import type { AgentTaskNotification } from '../../types/chat'
 
@@ -99,7 +100,7 @@ function renderPreview(
   toolName: string,
   obj: Record<string, unknown>,
   result?: { content: unknown; isError: boolean } | null,
-  t?: (key: any, params?: any) => string,
+  t?: (key: TranslationKey, params?: Record<string, string | number>) => string,
 ) {
   const filePath = typeof obj.file_path === 'string' ? obj.file_path : 'file'
 
@@ -153,7 +154,7 @@ function renderPreview(
   return null
 }
 
-function renderDetails(toolName: string, obj: Record<string, unknown>, t?: (key: any, params?: any) => string) {
+function renderDetails(toolName: string, obj: Record<string, unknown>, t?: (key: TranslationKey, params?: Record<string, string | number>) => string) {
   if (toolName === 'Edit' || toolName === 'Write') {
     return null
   }
@@ -173,7 +174,7 @@ function renderDetails(toolName: string, obj: Record<string, unknown>, t?: (key:
   )
 }
 
-function getToolResultSummary(toolName: string, content: unknown, t?: (key: any, params?: any) => string): string {
+function getToolResultSummary(toolName: string, content: unknown, t?: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
   if (toolName === 'Bash') return ''
 
   const text = extractTextContent(content)
@@ -190,7 +191,7 @@ function getToolResultSummary(toolName: string, content: unknown, t?: (key: any,
   return `${compact.slice(0, 36)}…`
 }
 
-function getToolSummary(toolName: string, obj: Record<string, unknown>, t?: (key: any, params?: any) => string): string {
+function getToolSummary(toolName: string, obj: Record<string, unknown>, t?: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
   switch (toolName) {
     case 'Bash':
       return typeof obj.command === 'string' ? obj.command : ''
@@ -229,7 +230,7 @@ function extractTextContent(content: unknown): string | null {
   return null
 }
 
-function changedLineSummary(oldString: string, newString: string, t?: (key: any, params?: any) => string): string {
+function changedLineSummary(oldString: string, newString: string, t?: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
   const oldLines = oldString.split('\n')
   const newLines = newString.split('\n')
   let changed = 0

@@ -3,8 +3,9 @@
  * Works with standard 5-field cron: minute hour day-of-month month day-of-week
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type TFunc = (key: any, params?: Record<string, string | number>) => string
+import type { TranslationKey } from '../i18n'
+
+type TFunc = (key: TranslationKey, params?: Record<string, string | number>) => string
 
 function pad(n: number): string {
   return n.toString().padStart(2, '0')
@@ -27,7 +28,7 @@ function describeDow(field: string, t: TFunc): string {
       days.push(parseInt(part))
     }
   }
-  return days.map((d) => t(`cron.dow.${d % 7}`)).join(', ')
+  return days.map((d) => t(`cron.dow.${d % 7}` as any)).join(', ') // dynamic key
 }
 
 export function describeCron(cron: string, t: TFunc): string {

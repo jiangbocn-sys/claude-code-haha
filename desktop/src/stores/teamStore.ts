@@ -10,6 +10,7 @@ type TeamStore = {
   viewingAgentId: string | null
   agentTranscript: TranscriptMessage[]
   memberColors: Map<string, AgentColor>
+  error: string | null
 
   fetchTeams: () => Promise<void>
   fetchTeamDetail: (name: string) => Promise<void>
@@ -29,17 +30,20 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
   viewingAgentId: null,
   agentTranscript: [],
   memberColors: new Map(),
+  error: null,
 
   fetchTeams: async () => {
+    set({ error: null })
     try {
       const { teams } = await teamsApi.list()
       set({ teams })
-    } catch {
-      // ignore
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : String(err) })
     }
   },
 
   fetchTeamDetail: async (name: string) => {
+    set({ error: null })
     try {
       const detail = await teamsApi.get(name)
       // Assign colors to members
@@ -48,17 +52,18 @@ export const useTeamStore = create<TeamStore>((set, get) => ({
         colors.set(m.agentId, AGENT_COLORS[i % AGENT_COLORS.length]!)
       })
       set({ activeTeam: detail, memberColors: colors })
-    } catch {
-      // ignore
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : String(err) })
     }
   },
 
   fetchMemberTranscript: async (teamName: string, agentId: string) => {
+    set({ error: null })
     try {
       const { messages } = await teamsApi.getMemberTranscript(teamName, agentId)
       set({ agentTranscript: messages, viewingAgentId: agentId })
-    } catch {
-      // ignore
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : String(err) })
     }
   },
 

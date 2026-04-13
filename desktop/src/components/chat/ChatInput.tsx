@@ -54,8 +54,7 @@ export function ChatInput() {
   const slashCommands = sessionState?.slashCommands ?? []
   const activeSession = useSessionStore((state) => activeTabId ? state.sessions.find((session) => session.id === activeTabId) ?? null : null)
   const [gitInfo, setGitInfo] = useState<GitInfo | null>(null)
-  const messages = useChatStore((s) => activeTabId ? s.sessions[activeTabId]?.messages ?? [] : [])
-  const hasMessages = messages.length > 0
+  const hasMessages = useChatStore((s) => activeTabId ? (s.sessions[activeTabId]?.messages?.length ?? 0) > 0 : false)
 
   const isActive = chatState !== 'idle'
   const isWorkspaceMissing = activeSession?.workDirExists === false

@@ -14,6 +14,7 @@ type ProviderStore = {
   providers: SavedProvider[]
   activeId: string | null
   isLoading: boolean
+  error: string | null
 
   fetchProviders: () => Promise<void>
   createProvider: (input: CreateProviderInput) => Promise<SavedProvider>
@@ -29,14 +30,15 @@ export const useProviderStore = create<ProviderStore>((set, get) => ({
   providers: [],
   activeId: null,
   isLoading: false,
+  error: null,
 
   fetchProviders: async () => {
-    set({ isLoading: true })
+    set({ isLoading: true, error: null })
     try {
       const { providers, activeId } = await providersApi.list()
       set({ providers, activeId, isLoading: false })
-    } catch {
-      set({ isLoading: false })
+    } catch (err) {
+      set({ isLoading: false, error: err instanceof Error ? err.message : String(err) })
     }
   },
 

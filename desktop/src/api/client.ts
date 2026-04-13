@@ -30,19 +30,28 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     'Content-Type': 'application/json',
   }
 
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    })
+    clearTimeout(timeout)
 
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => res.text())
-    throw new ApiError(res.status, errorBody)
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => res.text())
+      throw new ApiError(res.status, errorBody)
+    }
+
+    if (res.status === 204) return undefined as T
+    return res.json() as Promise<T>
+  } catch (err) {
+    clearTimeout(timeout)
+    throw err
   }
-
-  if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
 }
 
 export const api = {

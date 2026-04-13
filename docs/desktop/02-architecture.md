@@ -770,8 +770,7 @@ desktop/
 │   ├── Cargo.toml                # Rust 依赖
 │   └── tauri.conf.json           # Tauri 配置
 ├── sidecars/                      # Sidecar 启动器
-│   ├── server-launcher.ts        # Server 进程启动
-│   └── cli-launcher.ts           # CLI 进程启动
+│   └── claude-sidecar.ts         # server/cli/adapters 三种模式
 ├── scripts/
 │   └── build-sidecars.ts         # 跨平台编译脚本
 ├── vite.config.ts                # Vite 构建配置
@@ -819,17 +818,17 @@ adapters/                          # 外部 IM 适配器
 
 ```bash
 # 前端开发
-cd desktop && pnpm dev
+cd desktop && bun run dev
 
 # 编译 Sidecar
 cd desktop && bun run build:sidecars
 
 # Tauri 开发模式（前端 + 桌面框架）
-cd desktop && pnpm tauri dev
+cd desktop && bunx tauri dev
 
 # 构建发布包
-cd desktop && pnpm tauri build
+cd desktop && bunx tauri build
 
 # 运行测试
-cd desktop && pnpm test
+cd desktop && bun run test
 ```

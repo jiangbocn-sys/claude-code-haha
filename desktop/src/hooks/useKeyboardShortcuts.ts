@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useSessionStore } from '../stores/sessionStore'
 import { useChatStore } from '../stores/chatStore'
 import { useTabStore } from '../stores/tabStore'
@@ -12,6 +12,13 @@ export function useKeyboardShortcuts() {
   const stopGeneration = useChatStore((s) => s.stopGeneration)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const chatState = useChatStore((s) => activeTabId ? s.sessions[activeTabId]?.chatState ?? 'idle' : 'idle')
+
+  const activeModalRef = useRef(activeModal)
+  activeModalRef.current = activeModal
+  const chatStateRef = useRef(chatState)
+  chatStateRef.current = chatState
+  const activeTabIdRef = useRef(activeTabId)
+  activeTabIdRef.current = activeTabId
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -33,21 +40,21 @@ export function useKeyboardShortcuts() {
 
       // Escape — Close modal or clear state
       if (e.key === 'Escape') {
-        if (activeModal) {
+        if (activeModalRef.current) {
           closeModal()
         }
       }
 
       // Cmd+. — Stop generation
       if (meta && e.key === '.') {
-        if (chatState !== 'idle' && activeTabId) {
+        if (chatStateRef.current !== 'idle' && activeTabIdRef.current) {
           e.preventDefault()
-          stopGeneration(activeTabId)
+          stopGeneration(activeTabIdRef.current)
         }
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [activeModal, activeTabId, chatState, closeModal, setActiveSession, setActiveView, stopGeneration])
+  }, [closeModal, setActiveSession, setActiveView, stopGeneration])
 }

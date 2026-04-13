@@ -3,6 +3,7 @@ import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import { Modal } from '../shared/Modal'
 import { useTranslation } from '../../i18n'
+import type { TranslationKey } from '../../i18n'
 import type { AgentTaskNotification, UIMessage } from '../../types/chat'
 
 type ToolCall = Extract<UIMessage, { type: 'tool_use' }>
@@ -17,7 +18,7 @@ type Props = {
   isStreaming?: boolean
 }
 
-const TOOL_VERBS: Record<string, (count: number, t: (key: any, params?: any) => string) => string> = {
+const TOOL_VERBS: Record<string, (count: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) => string> = {
   Read: (n, t) => n === 1 ? t('toolGroup.readOne') : t('toolGroup.readMany', { count: n }),
   Write: (n, t) => n === 1 ? t('toolGroup.createdOne') : t('toolGroup.createdMany', { count: n }),
   Edit: (n, t) => n === 1 ? t('toolGroup.editedOne') : t('toolGroup.editedMany', { count: n }),
@@ -29,7 +30,7 @@ const TOOL_VERBS: Record<string, (count: number, t: (key: any, params?: any) => 
   WebFetch: (n, t) => n === 1 ? t('toolGroup.fetchedOne') : t('toolGroup.fetchedMany', { count: n }),
 }
 
-function generateSummary(toolCalls: ToolCall[], t: (key: any, params?: any) => string): string {
+function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
   const counts = new Map<string, number>()
   for (const tc of toolCalls) {
     counts.set(tc.toolName, (counts.get(tc.toolName) ?? 0) + 1)
@@ -476,7 +477,7 @@ function getAgentStatus({
 
 function getAgentStatusLabel(
   status: AgentStatus,
-  t: (key: any, params?: any) => string,
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
 ): string {
   switch (status) {
     case 'failed':

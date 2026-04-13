@@ -86,6 +86,10 @@ const pendingTaskToolUseIds = new Set<string>()
 let msgCounter = 0
 const nextId = () => `msg-${++msgCounter}-${Date.now()}`
 
+// Streaming throttle for content_delta
+let pendingDelta = ''
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+
 /** Helper: immutably update a specific session within the sessions record */
 function updateSessionIn(
   sessions: Record<string, PerSessionState>,
@@ -144,6 +148,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   disconnectSession: (sessionId) => {
     const session = get().sessions[sessionId]
     if (session?.elapsedTimer) clearInterval(session.elapsedTimer)
+    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null }
+    if (pendingDelta) {
+      const text = pendingDelta
+      pendingDelta = ''
+      set((s) => ({ sessions: updateSessionIn(s.sessions, sessionId, (sess) => ({ streamingText: sess.streamingText + text })) }))
+    }
     wsManager.disconnect(sessionId)
     set((s) => {
       const { [sessionId]: _, ...rest } = s.sessions
@@ -225,6 +235,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   stopGeneration: (sessionId) => {
     wsManager.send(sessionId, { type: 'stop_generation' })
+    if (flushTimer) { clearTimeout(flushTimer); flushTimer = null }
+    if (pendingDelta) {
+      const text = pendingDelta
+      pendingDelta = ''
+      set((s) => ({ sessions: updateSessionIn(s.sessions, sessionId, (sess) => ({ streamingText: sess.streamingText + text })) }))
+    }
     set((s) => {
       const session = s.sessions[sessionId]
       if (!session) return s
@@ -319,7 +335,17 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
 
       case 'content_delta':
-        if (msg.text !== undefined) update((s) => ({ streamingText: s.streamingText + msg.text }))
+        if (msg.text !== undefined) {
+          pendingDelta += msg.text
+          if (!flushTimer) {
+            flushTimer = setTimeout(() => {
+              const text = pendingDelta
+              pendingDelta = ''
+              flushTimer = null
+              update((s) => ({ streamingText: s.streamingText + text }))
+            }, 50)
+          }
+        }
         if (msg.toolInput !== undefined) update((s) => ({ streamingToolInput: s.streamingToolInput + msg.toolInput }))
         break
 

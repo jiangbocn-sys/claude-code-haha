@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import DOMPurify from 'dompurify'
 import mermaid from 'mermaid'
 import { Modal } from '../shared/Modal'
 import { CopyButton } from '../shared/CopyButton'
@@ -280,7 +281,7 @@ export function MermaidRenderer({ code }: Props) {
           className="flex items-center justify-center overflow-auto bg-white p-4 cursor-pointer"
           style={{ maxHeight: 400 }}
           onClick={handlePreview}
-          dangerouslySetInnerHTML={{ __html: svg }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
         />
       </div>
 
@@ -346,7 +347,7 @@ export function MermaidRenderer({ code }: Props) {
                 style={previewCanvasStyle}
                 data-dragging={isDraggingPreview ? 'true' : 'false'}
                 aria-label="Mermaid preview canvas"
-                dangerouslySetInnerHTML={{ __html: svg }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
               />
             </div>
           </div>

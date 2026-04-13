@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useChatStore } from '../../stores/chatStore'
 import { useTabStore } from '../../stores/tabStore'
 import { useTranslation } from '../../i18n'
+import type { TranslationKey } from '../../i18n'
 import { Button } from '../shared/Button'
 import { DiffViewer } from './DiffViewer'
 
@@ -33,7 +34,7 @@ const TOOL_META: Record<string, { icon: string; label: string; color: string }> 
 /**
  * Extract human-readable detail lines from tool input.
  */
-function extractToolDetails(toolName: string, input: unknown, t: (key: any, params?: any) => string): { primary: string; secondary?: string } {
+function extractToolDetails(toolName: string, input: unknown, t: (key: TranslationKey, params?: Record<string, string | number>) => string): { primary: string; secondary?: string } {
   const obj = (input && typeof input === 'object') ? input as Record<string, unknown> : {}
 
   switch (toolName) {
@@ -69,7 +70,7 @@ function extractToolDetails(toolName: string, input: unknown, t: (key: any, para
   }
 }
 
-function getPermissionTitle(toolName: string, input: unknown, t: (key: any, params?: any) => string) {
+function getPermissionTitle(toolName: string, input: unknown, t: (key: TranslationKey, params?: Record<string, string | number>) => string) {
   const obj = (input && typeof input === 'object') ? input as Record<string, unknown> : {}
   const filePath = typeof obj.file_path === 'string' ? obj.file_path : ''
   const fileName = filePath ? filePath.split('/').pop() || filePath : ''

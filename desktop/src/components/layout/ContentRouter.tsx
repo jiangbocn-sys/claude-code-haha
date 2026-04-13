@@ -8,20 +8,20 @@ import { AgentTranscript } from '../../pages/AgentTranscript'
 
 export function ContentRouter() {
   const activeTabId = useTabStore((s) => s.activeTabId)
-  const activeTab = useTabStore((s) => s.tabs.find((t) => t.sessionId === s.activeTabId))
+  const activeTabType = useTabStore((s) => s.tabs.find((t) => t.sessionId === s.activeTabId)?.type)
   const viewingAgentId = useTeamStore((s) => s.viewingAgentId)
 
   // No tabs open — show empty session
-  if (!activeTabId || !activeTab) {
+  if (!activeTabId || !activeTabType) {
     return <EmptySession />
   }
 
   // Special tabs
-  if (activeTab.type === 'settings') {
+  if (activeTabType === 'settings') {
     return <Settings />
   }
 
-  if (activeTab.type === 'scheduled') {
+  if (activeTabType === 'scheduled') {
     return <ScheduledTasks />
   }
 

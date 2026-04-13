@@ -60,8 +60,8 @@ describe('Content-only pages render without errors', () => {
       },
     })
     const { container } = render(<ActiveSession />)
-    // Should have the title area and chat input
-    expect(container.innerHTML).toContain('Untitled Session')
+    // With empty messages, the hero is shown
+    expect(container.innerHTML).toContain('New session')
     // ChatInput has a textarea
     expect(container.querySelector('textarea')).toBeInTheDocument()
     expect(container.innerHTML).not.toContain('Preview')

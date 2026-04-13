@@ -1,4 +1,5 @@
 import { useMemo, useCallback } from 'react'
+import DOMPurify from 'dompurify'
 import { marked, type Tokens } from 'marked'
 import { CodeViewer } from '../chat/CodeViewer'
 import { MermaidRenderer } from '../chat/MermaidRenderer'
@@ -169,10 +170,11 @@ export function MarkdownRenderer({ content, variant = 'default', className }: Pr
   }, [])
 
   if (codeBlocks.length === 0) {
+    const cleanHtml = DOMPurify.sanitize(html, { ADD_TAGS: ['use'], ADD_ATTR: ['xlink:href'] })
     return (
       <div
         className={proseClasses}
-        dangerouslySetInnerHTML={{ __html: html }}
+        dangerouslySetInnerHTML={{ __html: cleanHtml }}
         onClick={handleClick}
       />
     )
@@ -182,7 +184,7 @@ export function MarkdownRenderer({ content, variant = 'default', className }: Pr
     <div className={proseClasses} onClick={handleClick}>
       {parts.map((part, i) =>
         part.type === 'html' ? (
-          <div key={i} dangerouslySetInnerHTML={{ __html: part.content }} />
+          <div key={i} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(part.content, { ADD_TAGS: ['use'], ADD_ATTR: ['xlink:href'] }) }} />
         ) : shouldRenderAsMermaid(part.block) ? (
           <MermaidRenderer key={part.block.id} code={part.block.code} />
         ) : (

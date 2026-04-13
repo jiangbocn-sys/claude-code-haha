@@ -31,7 +31,7 @@ type SettingsStore = {
   setLocale: (locale: Locale) => void
 }
 
-export const useSettingsStore = create<SettingsStore>((set) => ({
+export const useSettingsStore = create<SettingsStore>((set, get) => ({
   permissionMode: 'default',
   currentModel: null,
   effortLevel: 'high',
@@ -68,8 +68,13 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   },
 
   setPermissionMode: async (mode) => {
+    const prev = get().permissionMode
     set({ permissionMode: mode })
-    await settingsApi.setPermissionMode(mode)
+    try {
+      await settingsApi.setPermissionMode(mode)
+    } catch {
+      set({ permissionMode: prev })
+    }
   },
 
   setModel: async (modelId) => {
@@ -79,8 +84,13 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   },
 
   setEffort: async (level) => {
+    const prev = get().effortLevel
     set({ effortLevel: level })
-    await modelsApi.setEffort(level)
+    try {
+      await modelsApi.setEffort(level)
+    } catch {
+      set({ effortLevel: prev })
+    }
   },
 
   setLocale: (locale) => {

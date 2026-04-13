@@ -28,7 +28,7 @@ describe('Real Provider Configs', () => {
     const minimax = await service.addProvider({
       name: 'MiniMax',
       baseUrl: 'https://api.minimaxi.com/anthropic',
-      apiKey: 'sk-api-aijgzQKtr1vLPS1KaoySY7_TRGTXCiQTCvgmoLOG31eyMfnrTBOLdtsEd_fFGAghPY_9Tlxt_jPc6bs5bziApZoEIuGq6bAERlKd-XHebifv44HMxLHDvjQ',
+      apiKey: 'sk-fake-test-key-for-testing-only',
       models: [
         { id: 'MiniMax-M2.7-highspeed', name: 'MiniMax M2.7 Highspeed', description: 'MiniMax 高速模型' },
       ],
@@ -66,7 +66,7 @@ describe('Real Provider Configs', () => {
     const jiekou = await service.addProvider({
       name: '接口AI中转站',
       baseUrl: 'https://api.jiekou.ai/anthropic',
-      apiKey: 'sk_WGYwseQ5YZ1Kb6tXbqnd-AXIAhlqFnYLfUt2gSF-vjQ',
+      apiKey: 'sk-fake-test-key-for-testing-only',
       models: [
         { id: 'claude-opus-4-6', name: 'Opus 4.6', description: 'Most capable', context: '200k' },
         { id: 'claude-sonnet-4-6', name: 'Sonnet 4.6', description: 'Most efficient', context: '200k' },

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useUIStore } from '../../stores/uiStore'
+import { useTranslation } from '../../i18n'
 
 type UpdateInfo = {
   version: string
@@ -17,6 +18,7 @@ try {
 export function UpdateChecker() {
   const [update, setUpdate] = useState<UpdateInfo | null>(null)
   const addToast = useUIStore((s) => s.addToast)
+  const t = useTranslation()
 
   useEffect(() => {
     if (!isTauri) return
@@ -29,7 +31,7 @@ export function UpdateChecker() {
           setUpdate({ version: available.version, downloading: false, progress: 0 })
           addToast({
             type: 'info',
-            message: `New version v${available.version} available`,
+            message: t('update.newVersion', { version: available.version }),
             duration: 0, // persist until dismissed
           })
         }
@@ -71,7 +73,7 @@ export function UpdateChecker() {
     } catch (err) {
       addToast({
         type: 'error',
-        message: `Update failed: ${err instanceof Error ? err.message : String(err)}`,
+        message: t('update.failed', { error: err instanceof Error ? err.message : String(err) }),
       })
       setUpdate((u) => u && { ...u, downloading: false })
     }
@@ -81,7 +83,7 @@ export function UpdateChecker() {
     <div className="fixed top-4 right-4 z-[200] max-w-xs">
       <div className="bg-[var(--color-surface-container-low)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-[var(--shadow-dropdown)] p-4">
         <p className="text-sm font-medium text-[var(--color-text-primary)]">
-          v{update.version} available
+          {t('update.available', { version: update.version })}
         </p>
         {update.downloading ? (
           <div className="mt-2">
@@ -91,7 +93,7 @@ export function UpdateChecker() {
                 style={{ width: `${Math.min(update.progress, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-[var(--color-text-tertiary)] mt-1">Downloading...</p>
+            <p className="text-xs text-[var(--color-text-tertiary)] mt-1">{t('update.downloading')}</p>
           </div>
         ) : (
           <div className="mt-2 flex gap-2">
@@ -99,13 +101,13 @@ export function UpdateChecker() {
               onClick={handleUpdate}
               className="px-3 py-1 text-xs font-medium rounded-[var(--radius-md)] bg-[var(--color-text-accent)] text-white hover:opacity-90 transition-opacity"
             >
-              Update now
+              {t('update.now')}
             </button>
             <button
               onClick={() => setUpdate(null)}
               className="px-3 py-1 text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
             >
-              Later
+              {t('update.later')}
             </button>
           </div>
         )}

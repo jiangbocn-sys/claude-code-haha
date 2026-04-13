@@ -518,6 +518,29 @@ export const zh: Record<TranslationKey, string> = {
   'scheduledPage.connectedLocal': '已连接到本地节点',
   'scheduledPage.thisMonth': '本月 {count}',
 
+  // ─── 更新检查 ──────────────────────────────────────
+  'update.available': 'v{version} 可用',
+  'update.newVersion': '新版本 v{version} 可用',
+  'update.downloading': '下载中...',
+  'update.now': '立即更新',
+  'update.later': '稍后',
+  'update.failed': '更新失败: {error}',
+
+  // ─── 活跃会话 ──────────────────────────────────────
+  'session.untitled': '未命名会话',
+  'session.active': '会话活跃中',
+  'session.lastUpdated': '最后更新 {time}',
+  'session.messages': '{count} 条消息',
+  'session.workspaceUnavailable': '工作目录不可用: {dir}',
+  'session.timeJustNow': '刚刚',
+  'session.timeMinutes': '{n}分钟前',
+  'session.timeHours': '{n}小时前',
+  'session.timeDays': '{n}天前',
+
+  // ─── 应用外壳 ──────────────────────────────────────
+  'app.serverFailed': '本地服务启动失败',
+  'app.launching': '正在启动本地工作区...',
+
   // ─── Error Codes ──────────────────────────────────────
   'error.CLI_NOT_RUNNING': 'CLI 进程未运行。会话可能已结束或进程已崩溃。',
   'error.CLI_START_FAILED': 'CLI 进程启动失败。',

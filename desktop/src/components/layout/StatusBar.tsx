@@ -5,12 +5,10 @@ import { useTabStore } from '../../stores/tabStore'
 export function StatusBar() {
   const { currentModel } = useSettingsStore()
   const activeTabId = useTabStore((s) => s.activeTabId)
-  const sessions = useSessionStore((s) => s.sessions)
+  const projectPath = useSessionStore((s) => s.sessions.find((session) => session.id === activeTabId)?.projectPath)
 
-  const activeSession = sessions.find((s) => s.id === activeTabId)
-
-  const projectName = activeSession?.projectPath
-    ? activeSession.projectPath.split('-').filter(Boolean).pop() || ''
+  const projectName = projectPath
+    ? projectPath.split('-').filter(Boolean).pop() || ''
     : ''
 
   return (

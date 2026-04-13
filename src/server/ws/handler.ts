@@ -27,6 +27,12 @@ const providerService = new ProviderService()
 const sessionSlashCommands = new Map<string, Array<{ name: string; description: string }>>()
 
 /**
+ * Timers for delayed session cleanup after client disconnect.
+ * If a client reconnects within 5 minutes, the timer is cancelled.
+ */
+const sessionCleanupTimers = new Map<string, ReturnType<typeof setTimeout>>()
+
+/**
  * Track user message count and title state per session for auto-title generation.
  */
 const sessionTitleState = new Map<string, {
@@ -69,6 +75,13 @@ export const handleWebSocket = {
     }
 
     console.log(`[WS] Client connected for session: ${sessionId}`)
+
+    // Cancel pending cleanup timer if client reconnects
+    const pendingTimer = sessionCleanupTimers.get(sessionId)
+    if (pendingTimer) {
+      clearTimeout(pendingTimer)
+      sessionCleanupTimers.delete(sessionId)
+    }
 
     activeSessions.set(sessionId, ws)
 
@@ -134,9 +147,16 @@ export const handleWebSocket = {
     sessionSlashCommands.delete(sessionId)
     sessionTitleState.delete(sessionId)
 
-    // NOTE: Do NOT stop CLI subprocess on WS disconnect.
-    // The CLI process should stay alive so reconnecting reuses it.
-    // This prevents "Session ID already in use" errors from stale locks.
+    // Schedule delayed cleanup: if the client doesn't reconnect within 5 minutes,
+    // stop the CLI subprocess to avoid leaking resources.
+    const cleanupTimer = setTimeout(() => {
+      sessionCleanupTimers.delete(sessionId)
+      if (!activeSessions.has(sessionId)) {
+        console.log(`[WS] Session ${sessionId} not reconnected after 5 min, stopping CLI subprocess`)
+        conversationService.stopSession(sessionId)
+      }
+    }, 5 * 60 * 1000)
+    sessionCleanupTimers.set(sessionId, cleanupTimer)
   },
 
   drain(ws: ServerWebSocket<WebSocketData>) {

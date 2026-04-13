@@ -8,6 +8,7 @@
  */
 
 import * as fs from 'fs/promises'
+import { existsSync, statSync } from 'node:fs'
 import * as path from 'path'
 import * as os from 'os'
 import * as crypto from 'crypto'
@@ -357,7 +358,11 @@ export class CronScheduler {
 
     const runId = crypto.randomBytes(6).toString('hex')
     const startedAt = new Date().toISOString()
-    const workDir = task.folderPath || os.homedir()
+    let workDir = task.folderPath || os.homedir()
+    if (task.folderPath && (!existsSync(task.folderPath) || !statSync(task.folderPath).isDirectory())) {
+      console.warn(`[cron] task ${task.id}: folderPath "${task.folderPath}" is not a valid directory, falling back to homedir`)
+      workDir = os.homedir()
+    }
 
     // Only create a session when explicitly requested (manual "Run Now"),
     // not for automatic cron runs — avoids flooding the sidebar.

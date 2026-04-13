@@ -10,11 +10,13 @@ import { initializeDesktopServerUrl } from '../../lib/desktopRuntime'
 import { TabBar } from './TabBar'
 import { useTabStore, SETTINGS_TAB_ID } from '../../stores/tabStore'
 import { useChatStore } from '../../stores/chatStore'
+import { useTranslation } from '../../i18n'
 
 export function AppShell() {
   const fetchSettings = useSettingsStore((s) => s.fetchAll)
   const [ready, setReady] = useState(false)
   const [startupError, setStartupError] = useState<string | null>(null)
+  const t = useTranslation()
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +74,7 @@ export function AppShell() {
       <div className="h-screen flex items-center justify-center bg-[var(--color-surface)] px-6">
         <div className="max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-6">
           <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
-            Local server failed to start
+            {t('app.serverFailed')}
           </h1>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
             {startupError}
@@ -85,7 +87,7 @@ export function AppShell() {
   if (!ready) {
     return (
       <div className="h-screen flex items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-secondary)]">
-        Launching local workspace...
+        {t('app.launching')}
       </div>
     )
   }

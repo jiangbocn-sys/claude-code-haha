@@ -5,6 +5,7 @@
 
 import * as path from 'path'
 import * as fs from 'fs'
+import * as os from 'os'
 
 const IMAGE_MIME_TYPES: Record<string, string> = {
   '.png': 'image/png',
@@ -37,6 +38,13 @@ async function handleServeFile(url: URL): Promise<Response> {
   }
 
   const resolvedPath = path.resolve(filePath)
+
+  // Path whitelist: only allow access under home directory or /tmp
+  const homeDir = os.homedir()
+  if (!resolvedPath.startsWith(homeDir) && !resolvedPath.startsWith('/tmp')) {
+    return json({ error: 'Access denied: path outside allowed directory' }, 403)
+  }
+
   const ext = path.extname(resolvedPath).toLowerCase()
   const mimeType = IMAGE_MIME_TYPES[ext]
 
@@ -71,6 +79,13 @@ async function handleServeFile(url: URL): Promise<Response> {
 async function handleBrowse(url: URL): Promise<Response> {
   const targetPath = url.searchParams.get('path') || process.env.HOME || '/'
   const resolvedPath = path.resolve(targetPath)
+
+  // Path whitelist: only allow browsing under home directory or /tmp
+  const homeDir = os.homedir()
+  if (!resolvedPath.startsWith(homeDir) && !resolvedPath.startsWith('/tmp')) {
+    return json({ error: 'Access denied: path outside allowed directory' }, 403)
+  }
+
   const searchQuery = url.searchParams.get('search') || ''
   const includeFiles = url.searchParams.get('includeFiles') === 'true'
   const maxResults = Math.min(parseInt(url.searchParams.get('maxResults') || '200', 10), 200)

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo, memo } from 'react'
 import { useChatStore } from '../../stores/chatStore'
 import { useTabStore } from '../../stores/tabStore'
 import { useTranslation } from '../../i18n'
@@ -77,28 +77,31 @@ export function MessageList() {
     bottomRef.current?.scrollIntoView?.({ behavior: 'smooth' })
   }, [messages.length, streamingText])
 
-  const toolUseIds = new Set<string>()
-  const toolResultMap = new Map<string, ToolResult>()
-  const childToolCallsByParent = new Map<string, ToolCall[]>()
+  const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(() => {
+    const toolUseIds = new Set<string>()
+    const toolResultMap = new Map<string, ToolResult>()
+    const childToolCallsByParent = new Map<string, ToolCall[]>()
 
-  for (const msg of messages) {
-    if (msg.type === 'tool_use') {
-      toolUseIds.add(msg.toolUseId)
-      if (msg.parentToolUseId) {
-        const siblings = childToolCallsByParent.get(msg.parentToolUseId)
-        if (siblings) {
-          siblings.push(msg)
-        } else {
-          childToolCallsByParent.set(msg.parentToolUseId, [msg])
+    for (const msg of messages) {
+      if (msg.type === 'tool_use') {
+        toolUseIds.add(msg.toolUseId)
+        if (msg.parentToolUseId) {
+          const siblings = childToolCallsByParent.get(msg.parentToolUseId)
+          if (siblings) {
+            siblings.push(msg)
+          } else {
+            childToolCallsByParent.set(msg.parentToolUseId, [msg])
+          }
         }
       }
+      if (msg.type === 'tool_result' && msg.toolUseId) {
+        toolResultMap.set(msg.toolUseId, msg)
+      }
     }
-    if (msg.type === 'tool_result' && msg.toolUseId) {
-      toolResultMap.set(msg.toolUseId, msg)
-    }
-  }
 
-  const renderItems = buildRenderItems(messages, toolUseIds)
+    const renderItems = buildRenderItems(messages, toolUseIds)
+    return { toolUseIds, toolResultMap, childToolCallsByParent, renderItems }
+  }, [messages])
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4">
@@ -157,7 +160,7 @@ export function MessageList() {
   )
 }
 
-function MessageBlock({
+const MessageBlock = memo(function MessageBlock({
   message,
   activeThinkingId,
   agentTaskNotifications,
@@ -234,4 +237,4 @@ function MessageBlock({
         </div>
       )
   }
-}
+})

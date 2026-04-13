@@ -253,6 +253,10 @@
 - 支持表格、列表、引用、链接
 - 内联代码和粗体/斜体
 
+### Mermaid 图表渲染
+
+支持 Mermaid 图表实时渲染（`MermaidRenderer` 组件），使用 `securityLevel: 'strict'` 安全模式。支持流程图、时序图、甘特图、类图等所有 Mermaid 图表类型。渲染失败时自动回退显示源代码。
+
 ---
 
 ## 四、Agent Teams 团队协作
@@ -404,6 +408,10 @@
 | userSettings | 用户级自定义 |
 | projectSettings | 项目级自定义 |
 | localSettings | 本地自定义 |
+
+### 关于页面
+
+设置页新增「关于」标签页（About），展示应用名称、版本号、GitHub 仓库链接、作者信息及社交链接。macOS 菜单栏的「关于 Claude Code Haha」菜单项会直接导航到此页面，而非弹出系统默认的关于弹窗。
 
 ---
 
