@@ -149,7 +149,8 @@ describe('TabBar', () => {
       render(<TabBar />)
     })
 
-    expect(screen.getByTestId('tab-bar')).toHaveAttribute('data-tauri-drag-region')
+    expect(screen.getByTestId('tab-bar')).not.toHaveAttribute('data-tauri-drag-region')
+    expect(screen.getByTestId('tab-bar-drag-gutter')).toHaveAttribute('data-tauri-drag-region')
   })
 
   it('starts dragging when clicking the empty tab-bar gutter', async () => {
@@ -213,5 +214,40 @@ describe('TabBar', () => {
     fireEvent.mouseDown(screen.getByText('Untitled Session'))
 
     expect(startDraggingMock).not.toHaveBeenCalled()
+  })
+
+  it('reorders tabs via drag and drop', async () => {
+    const { TabBar } = await import('./TabBar')
+    const { useTabStore } = await import('../../stores/tabStore')
+    const { useChatStore } = await import('../../stores/chatStore')
+
+    useTabStore.setState({
+      tabs: [
+        { sessionId: 'tab-1', title: 'First Session', type: 'session', status: 'idle' },
+        { sessionId: 'tab-2', title: 'Second Session', type: 'session', status: 'idle' },
+      ],
+      activeTabId: 'tab-1',
+    })
+    useChatStore.setState({
+      sessions: {},
+      disconnectSession: vi.fn(),
+    } as Partial<ReturnType<typeof useChatStore.getState>>)
+
+    await act(async () => {
+      render(<TabBar />)
+    })
+
+    const firstTab = screen.getByText('First Session').closest('[draggable="true"]')
+    const secondTab = screen.getByText('Second Session').closest('[draggable="true"]')
+
+    expect(firstTab).toBeTruthy()
+    expect(secondTab).toBeTruthy()
+
+    fireEvent.dragStart(firstTab!)
+    fireEvent.dragOver(secondTab!)
+    fireEvent.drop(secondTab!)
+    fireEvent.dragEnd(firstTab!)
+
+    expect(useTabStore.getState().tabs.map((tab) => tab.sessionId)).toEqual(['tab-2', 'tab-1'])
   })
 })
