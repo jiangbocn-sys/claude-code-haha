@@ -911,6 +911,180 @@ describe('MessageList nested tool calls', () => {
     })
   })
 
+  it('undoes only the latest completed turn when earlier turns also changed files', async () => {
+    vi.spyOn(sessionsApi, 'rewind')
+      .mockResolvedValueOnce({
+        target: {
+          targetUserMessageId: 'user-2',
+          userMessageIndex: 1,
+          userMessageCount: 2,
+        },
+        conversation: {
+          messagesRemoved: 2,
+        },
+        code: {
+          available: true,
+          filesChanged: ['src/second.ts'],
+          insertions: 7,
+          deletions: 2,
+        },
+      })
+      .mockResolvedValueOnce({
+        target: {
+          targetUserMessageId: 'user-2',
+          userMessageIndex: 1,
+          userMessageCount: 2,
+        },
+        conversation: {
+          messagesRemoved: 2,
+          removedMessageIds: ['user-2', 'assistant-2'],
+        },
+        code: {
+          available: true,
+          filesChanged: ['src/second.ts'],
+          insertions: 7,
+          deletions: 2,
+        },
+      })
+    vi.spyOn(sessionsApi, 'getWorkspaceStatus').mockResolvedValue({
+      state: 'ok',
+      workDir: '/tmp/example-project',
+      repoName: 'example-project',
+      branch: null,
+      isGitRepo: false,
+      changedFiles: [],
+    })
+    const reloadHistory = vi.fn().mockResolvedValue(undefined)
+    const queueComposerPrefill = vi.fn()
+
+    useChatStore.setState({
+      reloadHistory,
+      queueComposerPrefill,
+      sessions: {
+        [ACTIVE_TAB]: makeSessionState({
+          messages: [
+            {
+              id: 'user-1',
+              type: 'user_text',
+              content: '第一轮需求',
+              timestamp: 1,
+            },
+            {
+              id: 'assistant-1',
+              type: 'assistant_text',
+              content: 'first done',
+              timestamp: 2,
+            },
+            {
+              id: 'user-2',
+              type: 'user_text',
+              content: '第二轮需求',
+              timestamp: 3,
+            },
+            {
+              id: 'assistant-2',
+              type: 'assistant_text',
+              content: 'second done',
+              timestamp: 4,
+            },
+          ],
+        }),
+      },
+    })
+
+    render(<MessageList />)
+
+    expect(await screen.findByText('1 files changed')).toBeTruthy()
+    expect(screen.getByText('src/second.ts')).toBeTruthy()
+    expect(sessionsApi.rewind).toHaveBeenCalledWith(ACTIVE_TAB, {
+      targetUserMessageId: 'user-2',
+      userMessageIndex: 1,
+      expectedContent: '第二轮需求',
+      dryRun: true,
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo current turn changes' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Undo current turn?' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Undo current turn' }))
+
+    await waitFor(() => {
+      expect(sessionsApi.rewind).toHaveBeenLastCalledWith(ACTIVE_TAB, {
+        targetUserMessageId: 'user-2',
+        userMessageIndex: 1,
+        expectedContent: '第二轮需求',
+      })
+    })
+    expect(reloadHistory).toHaveBeenCalledWith(ACTIVE_TAB)
+    expect(queueComposerPrefill).toHaveBeenCalledWith(ACTIVE_TAB, {
+      text: '第二轮需求',
+      attachments: undefined,
+    })
+  })
+
+  it('does not show a stale current-turn change card when the latest completed turn has no files', async () => {
+    vi.spyOn(sessionsApi, 'rewind').mockResolvedValue({
+      target: {
+        targetUserMessageId: 'user-2',
+        userMessageIndex: 1,
+        userMessageCount: 2,
+      },
+      conversation: {
+        messagesRemoved: 2,
+      },
+      code: {
+        available: true,
+        filesChanged: [],
+        insertions: 0,
+        deletions: 0,
+      },
+    })
+
+    useChatStore.setState({
+      sessions: {
+        [ACTIVE_TAB]: makeSessionState({
+          messages: [
+            {
+              id: 'user-1',
+              type: 'user_text',
+              content: '第一轮改文件',
+              timestamp: 1,
+            },
+            {
+              id: 'assistant-1',
+              type: 'assistant_text',
+              content: 'first done',
+              timestamp: 2,
+            },
+            {
+              id: 'user-2',
+              type: 'user_text',
+              content: '第二轮只解释',
+              timestamp: 3,
+            },
+            {
+              id: 'assistant-2',
+              type: 'assistant_text',
+              content: 'second done',
+              timestamp: 4,
+            },
+          ],
+        }),
+      },
+    })
+
+    render(<MessageList />)
+
+    await waitFor(() => {
+      expect(sessionsApi.rewind).toHaveBeenCalledWith(ACTIVE_TAB, {
+        targetUserMessageId: 'user-2',
+        userMessageIndex: 1,
+        expectedContent: '第二轮只解释',
+        dryRun: true,
+      })
+    })
+    expect(screen.queryByLabelText('Current turn changed files')).toBeNull()
+  })
+
   it('shows raw startup details under translated CLI startup errors', () => {
     useChatStore.setState({
       sessions: {

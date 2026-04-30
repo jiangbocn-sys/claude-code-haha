@@ -1726,6 +1726,86 @@ describe('Sessions API', () => {
     expect(remainingMessages[0]?.id).toBe(firstUserId)
   })
 
+  it('POST /api/sessions/:id/rewind should keep first-turn file state when undoing only the latest turn', async () => {
+    const sessionId = 'dddddddd-bbbb-cccc-dddd-ffffffffffff'
+    const workDir = path.join(tmpDir, 'two-turns-separate-files')
+    const firstTurnFile = path.join(workDir, 'src', 'first.js')
+    const secondTurnFile = path.join(workDir, 'src', 'second.js')
+    const firstUserId = crypto.randomUUID()
+    const secondUserId = crypto.randomUUID()
+    const firstBaseBackup = 'separate-first@v1'
+    const firstAfterTurnBackup = 'separate-first@v2'
+    const secondBaseBackup = 'separate-second@v1'
+
+    await fs.mkdir(path.dirname(firstTurnFile), { recursive: true })
+    await fs.writeFile(firstTurnFile, "export const FIRST = 'v1'\n", 'utf-8')
+    await fs.writeFile(secondTurnFile, "export const SECOND = 'v2'\n", 'utf-8')
+    await writeFileHistoryBackup(sessionId, firstBaseBackup, "export const FIRST = 'base'\n")
+    await writeFileHistoryBackup(sessionId, firstAfterTurnBackup, "export const FIRST = 'v1'\n")
+    await writeFileHistoryBackup(sessionId, secondBaseBackup, "export const SECOND = 'base'\n")
+
+    await writeSessionFile('-tmp-api-two-turns-separate-files', sessionId, [
+      makeSessionMetaEntry(workDir),
+      makeFileHistorySnapshotEntry(firstUserId, {
+        'src/first.js': {
+          backupFileName: firstBaseBackup,
+          version: 1,
+          backupTime: '2026-01-01T00:00:00.000Z',
+        },
+      }),
+      {
+        ...makeUserEntry('make first file v1', firstUserId),
+        cwd: workDir,
+        sessionId,
+      },
+      makeAssistantEntry('DONE first', firstUserId),
+      makeFileHistorySnapshotEntry(secondUserId, {
+        'src/first.js': {
+          backupFileName: firstAfterTurnBackup,
+          version: 2,
+          backupTime: '2026-01-01T00:00:00.000Z',
+        },
+        'src/second.js': {
+          backupFileName: secondBaseBackup,
+          version: 1,
+          backupTime: '2026-01-01T00:00:00.000Z',
+        },
+      }),
+      {
+        ...makeUserEntry('make second file v2', secondUserId),
+        cwd: workDir,
+        sessionId,
+      },
+      makeAssistantEntry('DONE second', secondUserId),
+    ])
+
+    const previewRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/rewind`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userMessageIndex: 1, dryRun: true }),
+    })
+    expect(previewRes.status).toBe(200)
+    const preview = await previewRes.json() as {
+      code: { available: boolean; filesChanged: string[] }
+    }
+    expect(preview.code.available).toBe(true)
+    expect(preview.code.filesChanged).toEqual([secondTurnFile])
+
+    const executeRes = await fetch(`${baseUrl}/api/sessions/${sessionId}/rewind`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userMessageIndex: 1 }),
+    })
+    expect(executeRes.status).toBe(200)
+
+    expect(await fs.readFile(firstTurnFile, 'utf-8')).toBe("export const FIRST = 'v1'\n")
+    expect(await fs.readFile(secondTurnFile, 'utf-8')).toBe("export const SECOND = 'base'\n")
+
+    const remainingMessages = await service.getSessionMessages(sessionId)
+    expect(remainingMessages).toHaveLength(2)
+    expect(remainingMessages[0]?.id).toBe(firstUserId)
+  })
+
   it('POST /api/sessions/:id/rewind should include files created after the first turn', async () => {
     const sessionId = 'eeeeeeee-bbbb-cccc-dddd-eeeeeeeeeeee'
     const workDir = path.join(tmpDir, 'created-on-second-turn')

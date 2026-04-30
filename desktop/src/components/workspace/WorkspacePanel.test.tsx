@@ -88,6 +88,17 @@ async function clickElement(element: Element) {
   })
 }
 
+function classNameContains(element: Element | null, needle: string) {
+  let current = element
+  while (current) {
+    if (typeof current.className === 'string' && current.className.includes(needle)) {
+      return true
+    }
+    current = current.parentElement
+  }
+  return false
+}
+
 vi.mock('../../api/sessions', () => ({
   sessionsApi: (() => {
     if (!mocks) {
@@ -448,6 +459,60 @@ describe('WorkspacePanel', () => {
     expect(view.queryByLabelText('Close tab a.ts Diff')).toBeNull()
     expect(view.getByLabelText('Close tab a.ts File')).toBeTruthy()
     expect(view.getAllByText('b.ts').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('uses theme tokens for the panel, preview tabs, and code surface in dark mode', async () => {
+    await setSettingsState({ ...settingsInitialState, locale: 'en', theme: 'dark' })
+    await setWorkspaceState((state) => ({
+      ...state,
+      panelBySession: {
+        ...state.panelBySession,
+        'session-dark-theme': {
+          isOpen: true,
+          activeView: 'changed',
+        },
+      },
+      statusBySession: {
+        ...state.statusBySession,
+        'session-dark-theme': {
+          state: 'ok',
+          workDir: '/repo',
+          repoName: 'repo',
+          branch: 'main',
+          isGitRepo: true,
+          changedFiles: [],
+        },
+      },
+      previewTabsBySession: {
+        ...state.previewTabsBySession,
+        'session-dark-theme': [{
+          id: 'file:src/theme.ts',
+          path: 'src/theme.ts',
+          kind: 'file',
+          title: 'theme.ts',
+          language: 'typescript',
+          content: 'export const theme = "dark"',
+          state: 'ok',
+          size: 27,
+        }],
+      },
+      activePreviewTabIdBySession: {
+        ...state.activePreviewTabIdBySession,
+        'session-dark-theme': 'file:src/theme.ts',
+      },
+    }))
+
+    const view = await renderPanel('session-dark-theme')
+    const panel = view.getByTestId('workspace-panel')
+    const tabList = view.getByRole('tablist', { name: 'Preview tabs' })
+    const codeSurface = view.getByTestId('workspace-code')
+
+    expect(panel.className).toContain('bg-[var(--color-surface)]')
+    expect(panel.className).not.toContain('bg-white')
+    expect(tabList.className).toContain('bg-[var(--color-surface-container-lowest)]')
+    expect(tabList.className).not.toContain('bg-white')
+    expect(classNameContains(codeSurface, 'bg-[var(--color-code-bg)]')).toBe(true)
+    expect(classNameContains(codeSurface, 'bg-white')).toBe(false)
   })
 
   it('caps rendered preview lines to keep large diffs responsive', async () => {
