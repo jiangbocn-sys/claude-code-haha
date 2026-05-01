@@ -1093,18 +1093,21 @@ function GeneralSettings() {
               </a>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="mt-4 flex flex-col gap-3">
             <p className="text-xs text-[var(--color-text-tertiary)] leading-5">
               {t('settings.general.webSearchHint')}
             </p>
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={!webSearchDirty}
-              onClick={() => void setWebSearch(webSearchDraft)}
-            >
-              {t('settings.general.webSearchSave')}
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                variant="secondary"
+                className="min-w-[72px] px-4 whitespace-nowrap"
+                disabled={!webSearchDirty}
+                onClick={() => void setWebSearch(webSearchDraft)}
+              >
+                {t('settings.general.webSearchSave')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
