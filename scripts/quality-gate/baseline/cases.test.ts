@@ -25,4 +25,25 @@ describe('baselineCases', () => {
       expect(testCase.requiredCapabilities).toContain('model')
     }
   })
+
+  test('define enough first-wave product baseline cases', () => {
+    expect(baselineCases.map((testCase) => testCase.id)).toEqual([
+      'failing-unit',
+      'multi-file-api',
+      'failure-recovery',
+      'workspace-search-edit',
+      'permission-artifact',
+      'cross-module-refactor',
+    ])
+  })
+
+  test('pin changed-file expectations for every case', () => {
+    for (const testCase of baselineCases) {
+      expect(testCase.verify.requiredFiles?.length ?? 0).toBeGreaterThan(0)
+      expect(testCase.verify.expectedFiles?.length ?? 0).toBeGreaterThan(0)
+      for (const file of testCase.verify.requiredFiles ?? []) {
+        expect(testCase.verify.expectedFiles).toContain(file)
+      }
+    }
+  })
 })

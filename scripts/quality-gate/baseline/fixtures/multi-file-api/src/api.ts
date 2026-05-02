@@ -3,6 +3,12 @@ export type User = {
   email: string
 }
 
+export type UserDisplay = {
+  displayName: string
+}
+
 export function formatUser(user: User) {
-  return user.name
+  return {
+    displayName: user.name,
+  } satisfies UserDisplay
 }

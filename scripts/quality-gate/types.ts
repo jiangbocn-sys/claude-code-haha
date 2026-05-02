@@ -25,6 +25,7 @@ export type BaselineCase = {
   timeoutMs: number
   verify: {
     commands: string[][]
+    requiredFiles?: string[]
     expectedFiles?: string[]
     forbiddenFiles?: string[]
     transcriptAssertions?: string[]

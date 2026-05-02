@@ -1,4 +1,4 @@
-import { appendFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { appendFileSync, cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -49,6 +49,90 @@ async function runCommand(command: string[], cwd: string) {
   const stderr = await new Response(proc.stderr).text()
   const exitCode = await proc.exited
   return { exitCode, stdout, stderr }
+}
+
+function listFiles(root: string, current = root): string[] {
+  const files: string[] = []
+  for (const entry of readdirSync(current)) {
+    if (entry === 'node_modules' || entry === '.git') {
+      continue
+    }
+
+    const fullPath = join(current, entry)
+    const stat = statSync(fullPath)
+    if (stat.isDirectory()) {
+      files.push(...listFiles(root, fullPath))
+      continue
+    }
+    if (stat.isFile()) {
+      files.push(fullPath.slice(root.length + 1))
+    }
+  }
+  return files.sort()
+}
+
+function changedFiles(beforeDir: string, afterDir: string) {
+  const before = new Set(listFiles(beforeDir))
+  const after = new Set(listFiles(afterDir))
+  const changed = new Set<string>()
+
+  for (const file of before) {
+    if (!after.has(file)) {
+      changed.add(file)
+      continue
+    }
+    if (!readFileSync(join(beforeDir, file)).equals(readFileSync(join(afterDir, file)))) {
+      changed.add(file)
+    }
+  }
+
+  for (const file of after) {
+    if (!before.has(file)) {
+      changed.add(file)
+    }
+  }
+
+  return [...changed].sort()
+}
+
+async function writeDiffPatch(beforeDir: string, afterDir: string, patchPath: string) {
+  const result = await runCommand(['git', 'diff', '--no-index', '--', beforeDir, afterDir], process.cwd())
+  writeFileSync(patchPath, `${result.stdout}${result.stderr}`)
+}
+
+function verifyChangedFiles(testCase: BaselineCase, changed: string[]) {
+  const expected = testCase.verify.expectedFiles
+  if (expected) {
+    const unexpected = changed.filter((file) => !expected.includes(file))
+    if (unexpected.length > 0) {
+      throw new Error(`unexpected changed files: ${unexpected.join(', ')}`)
+    }
+  }
+
+  const required = testCase.verify.requiredFiles ?? []
+  const missing = required.filter((file) => !changed.includes(file))
+  if (missing.length > 0) {
+    throw new Error(`required files were not changed: ${missing.join(', ')}`)
+  }
+
+  const forbidden = testCase.verify.forbiddenFiles ?? []
+  const forbiddenChanged = forbidden.filter((file) => changed.includes(file))
+  if (forbiddenChanged.length > 0) {
+    throw new Error(`forbidden files changed: ${forbiddenChanged.join(', ')}`)
+  }
+}
+
+function verifyTranscript(testCase: BaselineCase, transcriptPath: string) {
+  const assertions = testCase.verify.transcriptAssertions ?? []
+  if (assertions.length === 0) {
+    return
+  }
+
+  const transcript = readFileSync(transcriptPath, 'utf8')
+  const missing = assertions.filter((assertion) => !transcript.includes(assertion))
+  if (missing.length > 0) {
+    throw new Error(`transcript assertions missing: ${missing.join(', ')}`)
+  }
 }
 
 async function pipeToFile(stream: ReadableStream<Uint8Array> | null, path: string) {
@@ -154,12 +238,15 @@ export async function executeBaselineCase(
   const port = await getPort()
   const baseUrl = `http://127.0.0.1:${port}`
   const workRoot = await mkdtemp(join(tmpdir(), `quality-gate-${testCase.id}-`))
+  const originalDir = join(workRoot, 'original')
   const projectDir = join(workRoot, 'project')
+  cpSync(join(rootDir, testCase.fixture), originalDir, { recursive: true })
   cpSync(join(rootDir, testCase.fixture), projectDir, { recursive: true })
 
   const serverLogPath = join(artifactDir, 'server.log')
   const transcriptPath = join(artifactDir, 'transcript.jsonl')
   const verificationPath = join(artifactDir, 'verification.log')
+  const diffPath = join(artifactDir, 'diff.patch')
   const server = Bun.spawn(['bun', 'run', 'src/server/index.ts', '--host', '127.0.0.1', '--port', String(port)], {
     cwd: rootDir,
     stdout: 'pipe',
@@ -190,6 +277,11 @@ export async function executeBaselineCase(
 
     const messages = await runPromptOverWebSocket(baseUrl, session.sessionId, testCase.prompt, testCase.timeoutMs, target)
     writeFileSync(transcriptPath, messages.map((message) => JSON.stringify(message)).join('\n') + '\n')
+    verifyTranscript(testCase, transcriptPath)
+
+    await writeDiffPatch(originalDir, projectDir, diffPath)
+    const changed = changedFiles(originalDir, projectDir)
+    verifyChangedFiles(testCase, changed)
 
     let verificationLog = ''
     for (const command of testCase.verify.commands) {
